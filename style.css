@@ -233,3 +233,23 @@ tr:hover { background: rgba(77, 166, 255, 0.1); }
 .tree-branch.open + .tree-content { 
     display: block !important; /* Erzwingt das Ausklappen */
 }
+/* Kompendium Fixes */
+.tree-icon { 
+    font-size: 18px !important; 
+    color: #ffcc00; 
+    margin-right: 12px; 
+    display: inline-block; 
+    transition: transform 0.2s; 
+}
+.tree-branch.open .tree-icon { 
+    transform: rotate(90deg) !important; 
+}
+.tree-content { 
+    display: none; 
+    padding-left: 20px; 
+    border-left: 2px solid #4da6ff; 
+    margin-top: 5px; 
+}
+.tree-branch.open + .tree-content { 
+    display: block !important; 
+}
