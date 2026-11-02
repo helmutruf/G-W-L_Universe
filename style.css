@@ -253,3 +253,9 @@ tr:hover { background: rgba(77, 166, 255, 0.1); }
 .tree-branch.open + .tree-content { 
     display: block !important; 
 }
+.table-scroll { 
+    overflow-y: auto; 
+    flex-grow: 1; 
+    min-height: 0; 
+    padding: 0; 
+}
