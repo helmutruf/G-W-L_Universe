@@ -139,8 +139,8 @@ function initGame() {
 }
 
 function resize() {
-    width = canvas.width = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    height = canvas.height = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+    width = canvas.width = document.documentElement.clientWidth || window.innerWidth;
+    height = canvas.height = document.documentElement.clientHeight || window.innerHeight;
     isLandscape = width > height;
     if (activeItem) updateUI();
 }
