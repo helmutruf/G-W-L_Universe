@@ -33,9 +33,11 @@ canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
     position: absolute; bottom: 0; left: 0; width: 100%;
     background: rgba(10, 15, 30, 0.95);
     border-top: 1px solid #4da6ff;
-    display: flex; justify-content: space-around; align-items: center;
+    display: flex; 
+    justify-content: center; /* DAS ist der entscheidende Befehl */
+    gap: 15px; /* Abstand zwischen den Buttons */
+    align-items: center;
     padding: 10px 0;
-    padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Platz für die Browserleiste */
     z-index: 20;
     box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
 }
