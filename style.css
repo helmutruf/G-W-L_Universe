@@ -1,7 +1,11 @@
-body { 
+html, body { 
     background-color: #050810; margin: 0; overflow: hidden; 
     font-family: 'Courier New', monospace; touch-action: none; 
     user-select: none; -webkit-user-select: none;
+    height: 100vh; /* Fallback für ältere Browser */
+    height: 100dvh; /* Dynamische Höhe – passt sich der sichtbaren Fläche an */
+    width: 100vw;
+    overscroll-behavior: none;
 }
 canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
 
@@ -30,7 +34,9 @@ canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
     background: rgba(10, 15, 30, 0.95);
     border-top: 1px solid #4da6ff;
     display: flex; justify-content: space-around; align-items: center;
-    padding: 10px 0; z-index: 20;
+    padding: 10px 0;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Platz für die Browserleiste */
+    z-index: 20;
     box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
 }
 .ctrl-btn {
