@@ -1,5 +1,6 @@
 // --- VARIABLEN ---
 let activeItem = null; 
+let isGodMode = false;
 let zoomLevel = 1.0;
 let initialPinchDistance = null;
 let isDragging = false;
@@ -20,7 +21,7 @@ let currentPlayer = "Du";
 let allPlayersData = {}; 
 const DB_KEY = 'gwl_multiplayer_db_v1';
 let particles = []; 
-let isGodMode = false;
+
 const entities = [
     { id: 'e1', x: 0, y: 0, color: '#4da6ff', vx: 0, vy: 0 }, 
     { id: 'e2', x: 0, y: 0, color: '#ff4d4d', vx: 0, vy: 0 }, 
@@ -35,6 +36,7 @@ let width, height;
 const canvas = document.getElementById('gwlCanvas');
 const ctx = canvas.getContext('2d');
 
+// UI Elemente
 const introOverlay = document.getElementById('intro-overlay');
 const nameModal = document.getElementById('name-modal');
 const nameInput = document.getElementById('player-name-input');
@@ -59,16 +61,19 @@ const btns = {
 const ratingIcons = { 0: "👍", 1: "👎", 2: "❓", 3: "➖" };
 const ratingColors = { 0: "#00ff64", 1: "#ff4d4d", 2: "#ffcc00", 3: "#888888" };
 
+// --- DER SEMANTISCHE GRAPH ---
 const semanticGraph = {
     "Liebe": { allies: ["Verbindung", "Geist", "Materie", "Nähe"], enemies: ["Hass", "Gleichgültigkeit"] },
-    "Wille": { allies: ["Schaffen", "Freiheit", "Materie", "Macht", "Kraft", "Stärke"], enemies: ["Zufall", "Chaos"] },
-    "Geist": { allies: ["Alles", "Freiheit", "Zahl", "Form", "Weisheit"], enemies: ["Chaos", "Zufall"] },
+    "Wille": { allies: ["Schaffen", "Freiheit", "Materie", "Macht", "Kraft", "Stärke", "Intelligenz"], enemies: ["Zufall", "Chaos"] },
+    "Geist": { allies: ["Alles", "Freiheit", "Zahl", "Form", "Weisheit", "Intelligenz"], enemies: ["Chaos", "Zufall"] },
     "Chaos": { allies: ["Zufall", "Auflösung"], enemies: ["Geist", "Wille", "Ordnung"] },
     "Materie": { allies: ["Werk", "Form", "Nähe"], enemies: ["Auflösung", "Chaos"] },
     "Macht": { allies: ["Wille", "Fokus"], enemies: ["Ohnmacht"] },
     "Kraft": { allies: ["Wille", "Schaffen"], enemies: ["Schwäche"] },
-    "Stärke": { allies: ["Wille", "Liebe"], enemies: ["Zweifel"] }
+    "Stärke": { allies: ["Wille", "Liebe"], enemies: ["Zweifel"] },
+    "Weisheit": { allies: ["Geist", "Liebe"], enemies: ["Dummheit"] },
     "Intelligenz": { allies: ["Geist", "Wille"], enemies: ["Dummheit", "Chaos"] },
+    "Freude": { allies: ["Liebe", "Geist"], enemies: ["Trauer"] }
 };
 
 const statements = [
@@ -93,10 +98,13 @@ const statements = [
     { text: "Macht ⊂ Wille (männlich)", color: "#ff4d4d", size: 18, weight: 1 },
     { text: "Kraft ⊂ Wille (neutrum)", color: "#ffffff", size: 18, weight: 1 },
     { text: "Stärke ⊂ Wille (weiblich)", color: "#4da6ff", size: 18, weight: 1 },
-    { text: "Wille = Macht + Kraft + Stärke", color: "#ffcc00", size: 20, weight: 2 }
-    { text: "Wille x Geist = Intelligenz", color: "#ffcc00", size: 20, weight: 2 },
-    
-    ];
+    { text: "Wille = Macht + Kraft + Stärke", color: "#ffcc00", size: 20, weight: 2 },
+    { text: "Die Zahl ist das Gesetz des Geistes", color: "#ffffff", size: 18, weight: 1 },
+    { text: "Weisheit = Geist ⋈ Liebe", color: "#4da6ff", size: 20, weight: 2 },
+    { text: "Intelligenz = Wille ⊂ Geist", color: "#ff4d4d", size: 18, weight: 1 },
+    { text: "Freude = Spiegel(Liebe, Geist)", color: "#4da6ff", size: 18, weight: 1 },
+    { text: "Wille x Geist = Intelligenz", color: "#ffcc00", size: 20, weight: 2 }
+];
 
 let items = [];
 
@@ -151,7 +159,7 @@ function startPlayerTurn() {
     updateScoreUI();
     stopAll(); 
     
-    // Personalisiere ALLE Aussagen, die das Wort "Konsens" enthalten
+    // Personalisiere alle Konsens-Aussagen
     items.forEach(item => {
         if (item.text.includes("Konsens")) {
             item.text = `Konsens = ${currentPlayer} ⋈ KI`;
@@ -164,7 +172,83 @@ function startPlayerTurn() {
     setTimeout(() => { kiPanel.classList.remove('active'); }, 7000);
 }
 
+function switchPlayer() {
+    document.getElementById('endgame-modal').classList.remove('active');
+    document.getElementById('table-modal').classList.remove('active');
+    document.getElementById('info-modal').classList.remove('active');
+    document.getElementById('compendium-modal').classList.remove('active');
+    
+    nameInput.value = "";
+    document.getElementById('name-modal-title').innerText = "Nächster Spieler?";
+    nameModal.classList.add('active');
+}
 
+function toggleGodMode() {
+    isGodMode = !isGodMode;
+    
+    const normalButtons = document.getElementById('normal-buttons');
+    const godButtons = document.getElementById('god-buttons');
+    
+    if (isGodMode) {
+        normalButtons.style.display = 'none';
+        godButtons.style.display = 'flex';
+        document.getElementById('selected-text').innerText = "👑 GOTT-MODUS: Prüfe die Aussage";
+        kiText.innerText = "Der Gott-Modus ist aktiv. Wähle eine Aussage und prüfe sie auf Fehler.";
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
+    } else {
+        normalButtons.style.display = 'flex';
+        godButtons.style.display = 'none';
+        document.getElementById('selected-text').innerText = "Aussage auswählen...";
+        kiText.innerText = "Zurück im normalen Modus. Bewerte die Aussagen.";
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
+    }
+}
+
+function godReject(reason) {
+    if (!activeItem) return;
+
+    let originalText = activeItem.text;
+    let newText = originalText;
+    let explanation = "";
+
+    if (reason === 'falsch') {
+        if (originalText.includes(" = ")) { newText = originalText.replace(" = ", " ≠ "); }
+        else if (originalText.includes(" ≠ ")) { newText = originalText.replace(" ≠ ", " = "); }
+        else if (originalText.includes(" ⋈ ")) { newText = originalText.replace(" ⋈ ", " ⋈¬ "); }
+        else { newText = "Nicht (" + originalText + ")"; }
+        explanation = "Ich habe den Operator invertiert, um die logische Wahrheit zu korrigieren.";
+        
+    } else if (reason === 'unpassend') {
+        let words = originalText.split(" ");
+        let firstWord = words[0];
+        
+        if (semanticGraph[firstWord]) {
+            let allies = semanticGraph[firstWord].allies;
+            if (allies.length > 0) {
+                let betterAlly = allies[Math.floor(Math.random() * allies.length)];
+                words[0] = betterAlly;
+                newText = words.join(" ");
+            }
+        } else {
+            newText = originalText + " [Kontext unklar]";
+        }
+        explanation = "Kontextuell unpassend. Ich habe das Subjekt durch ein verwandtes Nukleus ersetzt.";
+
+    } else if (reason === 'kollision') {
+        if (originalText.includes(" = ")) { newText = originalText.replace(" = ", " ⋈ Geist = "); }
+        else if (originalText.includes(" → ")) { newText = originalText.replace(" → ", " ⋈ Wille → "); }
+        else { newText = originalText + " (auf höherer Ebene)"; }
+        explanation = "Ebenenkollision erkannt. Ich habe eine vermittelnde Zwischenebene (Geist/Wille) eingefügt.";
+    }
+
+    kiText.innerText = `KI: Du weist "${originalText}" als "${reason}" zurück. ${explanation} Mein Vorschlag: "${newText}"`;
+    kiPanel.classList.add('active');
+    activeItem.suggestedText = newText;
+}
+
+// --- DATENBANK ---
 function loadDatabase() {
     const saved = localStorage.getItem(DB_KEY);
     if (saved) {
@@ -224,7 +308,6 @@ function changeOldRating(entry) {
         const item = items.find(i => i.id === entry.itemId);
         if (item) {
             item.stateIndex = 3; 
-            item.previousRating = entry.rating;
             item.isActive = true; 
             item.opacity = 0;
             item.previousRating = entry.rating;
@@ -280,6 +363,8 @@ function calculateStatistics(myData) {
 
 function toggleTable() { tableModal.classList.toggle('active'); }
 function toggleInfo() { document.getElementById('info-modal').classList.toggle('active'); }
+function toggleCompendium() { document.getElementById('compendium-modal').classList.toggle('active'); }
+
 function clearDatabase() {
     if (confirm(`Möchtest du die Historie von ${currentPlayer} wirklich löschen?`)) {
         allPlayersData[currentPlayer] = []; 
@@ -328,6 +413,7 @@ function startAIChallenge() {
     kiText.innerText = `${currentPlayer}, ich lege dir diese Aussage vor: "${target.text}". Ist sie absolut wahr?`;
     kiPanel.classList.add('active');
 }
+
 function berechneGlobaleKohaerenz() {
     const myData = allPlayersData[currentPlayer] || [];
     if (myData.length === 0) return 50; 
@@ -374,6 +460,7 @@ function setRating(state) {
     if (!allPlayersData[currentPlayer]) allPlayersData[currentPlayer] = [];
     allPlayersData[currentPlayer].push(dbEntry);
     saveDatabase();
+    updateScoreUI(); 
 
     entities.forEach(e => {
         particles.push({
@@ -386,16 +473,14 @@ function setRating(state) {
             decay: 0.03
         });
     });
-    updateScoreUI();
+
     let wasChallenge = false;
     if (activeItem === currentChallengeItem) {
         wasChallenge = true;
         currentChallengeItem = null;
-        let scoreChange = (state === 0) ? 10 : ((state === 1) ? -10 : 0);
         
-        
-        if (scoreChange > 0) kiText.innerText = `Kohärenz gestärkt (+${scoreChange}). Der Raum akzeptiert deine Wahrheit.`;
-        else if (scoreChange < 0) kiText.innerText = `Kohärenz geschwächt (${scoreChange}). Du widersprichst dem Anschauungsraum.`;
+        if (state === 0) kiText.innerText = `Kohärenz gestärkt. Der Raum akzeptiert deine Wahrheit.`;
+        else if (state === 1) kiText.innerText = `Kohärenz geschwächt. Du widersprichst dem Anschauungsraum.`;
         else kiText.innerText = `Neutralität. Der Raum bleibt unverändert.`;
         
         kiPanel.classList.add('active');
@@ -418,8 +503,8 @@ function setRating(state) {
 
     activeItem.stateIndex = state;
     activeItem.isActive = false; 
-    activeItem.opacity = 0; // NEU: Die Aussage sofort unsichtbar machen
-    activeItem.previousRating = undefined; // NEU: Markierung löschen, da neu bewertet
+    activeItem.opacity = 0;
+    activeItem.previousRating = undefined;
     activeItem.isSelected = false; 
 
     history.push({ oldId, newId, state, dbEntry, wasChallenge });
@@ -451,7 +536,7 @@ function kiReaction(item) {
             }
         }
         
-        kiText.innerText = " " + entities.length + " Mitspieler flüstern dir zu... " + comment;
+        kiText.innerText = "Die " + entities.length + " Mitspieler flüstern dir zu... " + comment;
         kiPanel.classList.add('active');
         setTimeout(() => { kiPanel.classList.remove('active'); }, 9000); 
     }
@@ -467,7 +552,7 @@ function undoRating() {
         const dbIndex = allPlayersData[currentPlayer].findIndex(e => e.itemId === lastAction.oldId && e.rating === lastAction.state);
         if (dbIndex > -1) { allPlayersData[currentPlayer].splice(dbIndex, 1); saveDatabase(); }
     }
-    if (lastAction.wasChallenge) updateScoreUI();
+    updateScoreUI(); 
     if (oldItem) { oldItem.stateIndex = 3; oldItem.isActive = true; oldItem.opacity = 0; }
     if (newItem) { newItem.isActive = false; newItem.stateIndex = 3; }
     redoStack.push(lastAction);
@@ -481,7 +566,7 @@ function redoRating() {
     const newItem = action.newId !== null ? items.find(i => i.id === action.newId) : null;
     
     if (action.dbEntry) { allPlayersData[currentPlayer].push(action.dbEntry); saveDatabase(); }
-    if (action.wasChallenge) updateScoreUI();
+    updateScoreUI();
     if (oldItem) { oldItem.stateIndex = action.state; oldItem.isActive = false; }
     if (newItem) { newItem.isActive = true; newItem.opacity = 0; }
     history.push(action);
@@ -501,8 +586,11 @@ function stopAll() {
 function updateUI() {
     if (activeItem) {
         uiPanel.classList.add('active');
-        uiText.innerText = activeItem.text;
+        
+        let displayText = activeItem.text.includes("Konsens") ? `Konsens = ${currentPlayer} ⋈ KI` : activeItem.text;
+        uiText.innerText = displayText;
         uiText.style.color = activeItem.color;
+        
         Object.values(btns).forEach(b => b.classList.remove('selected'));
         if (btns[activeItem.stateIndex]) btns[activeItem.stateIndex].classList.add('selected');
     } else {
@@ -516,8 +604,7 @@ function selectItem(item) {
         item.isSelected = true;
         activeItem = item;
         
-        // Die Aussage ganz nach vorne holen (vor das UI)
-     
+        item.z = -900; 
         
         items.sort((a, b) => {
             if (a.id === item.id) return 1;
@@ -734,14 +821,14 @@ function handlePointerMove(x, y) {
 function handlePointerUp() { isDragging = false; }
 
 function triggerEndgame() {
-    document.getElementById('endgame-text').innerText = `Du hast alle ${statements.length} Aussagen bewertet, ${currentPlayer}. Dein Kohärenz-Score liegt bei ${coherenceScore} Punkten. Aus deinen Entscheidungen und den Meinungen aller Mitspieler ist ein einzigartiger Anschauungsraum entstanden. Jede Meinung wurde ein Teil deiner Wahrheit.`;
+    document.getElementById('endgame-text').innerText = `Du hast alle ${statements.length} Aussagen bewertet, ${currentPlayer}. Dein Kohärenz-Score liegt bei ${coherenceScore} Punkten. Aus deinen Entscheidungen und den Meinungen der Mitspieler ist ein einzigartiger Anschauungsraum entstanden. Jede Meinung wurde ein Teil deiner Wahrheit.`;
     document.getElementById('endgame-modal').classList.add('active');
 }
 
 function restartGame() {
-    document.getElementById('endgame-text').innerText = `Du hast alle ${statements.length} Aussagen bewertet, ${currentPlayer}. Dein Kohärenz-Score liegt bei ${coherenceScore} Punkten. Aus deinen Entscheidungen und den Meinungen der Mitspieler entsteht einzigartiger Anschauungsraum. Jede Meinung wurde ein Teil deiner Wahrheit.`;
+    document.getElementById('endgame-modal').classList.remove('active');
     coherenceScore = 50;
-    updateScore(0);
+    updateScoreUI();
     stopAll();
     kiText.innerText = `Ein neuer Raum entsteht, ${currentPlayer}. Zeig mir noch einmal, was du für wahr hältst...`;
     kiPanel.classList.add('active');
@@ -830,9 +917,10 @@ function drawSpruchband(item, x, y, scale, rotation, dimFactor) {
     const depthAlpha = Math.max(0.3, Math.min(1, item.z > 800 ? 1 - ((item.z - 800) / 200) : (item.z < -200 ? 1 + ((item.z + 200) / 200) : 1)));
     ctx.globalAlpha = depthAlpha * dimFactor * item.opacity;
 
-    ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
     let displayText = item.text.includes("Konsens") ? `Konsens = ${currentPlayer} ⋈ KI` : item.text;
-let textWidth = ctx.measureText(displayText).width;
+    
+    ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
+    let textWidth = ctx.measureText(displayText).width;
 
     if (item.isSelected) {
         const maxAllowedWidth = (width * 0.85) / zoomLevel; 
@@ -856,16 +944,17 @@ let textWidth = ctx.measureText(displayText).width;
         ctx.fill(); ctx.stroke();
     }
 
-    ctx.fillStyle = item.isSelected ? "#ffffff" : item.color;
+    ctx.fillStyle = item.isSelected ? "#ffffff" : (item.previousRating !== undefined ? "#ffcc00" : item.color);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.shadowBlur = 10 * finalScale * item.weight; ctx.shadowColor = item.color;
-    ctx.fillText(item.text, 0, 0);
-    // NEU: Alte Bewertung anzeigen, wenn vorhanden
-if (item.previousRating !== undefined && !item.isSelected) {
-    ctx.fillStyle = "#ffcc00"; // Gold
-    ctx.font = `${fontSize * 0.6}px Arial`;
-    ctx.fillText("War: " + ratingIcons[item.previousRating], 0, fontSize + 10); 
-}
+    ctx.fillText(displayText, 0, 0);
+
+    if (item.previousRating !== undefined && !item.isSelected) {
+        ctx.fillStyle = "#ffcc00"; 
+        ctx.font = `${fontSize * 0.6}px Arial`;
+        ctx.fillText("War: " + ratingIcons[item.previousRating], 0, fontSize + 10); 
+    }
+
     ctx.restore();
 }
 
@@ -878,17 +967,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
         this.closePath(); return this;
     };
 }
-function switchPlayer() {
-    // Schließe alle überlappenden Fenster
-    document.getElementById('endgame-modal').classList.remove('active');
-    document.getElementById('table-modal').classList.remove('active');
-    document.getElementById('info-modal').classList.remove('active');
-    document.getElementById('compendium-modal').classList.remove('active');
-    
-    nameInput.value = "";
-    document.getElementById('name-modal-title').innerText = "Nächster Spieler?";
-    nameModal.classList.add('active');
-}
+
 window.addEventListener('DOMContentLoaded', () => {
     resize();
     initGame();
