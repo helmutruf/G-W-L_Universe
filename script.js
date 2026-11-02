@@ -1,7 +1,7 @@
 // --- VARIABLEN ---
 let activeItem = null; 
-let currentGodSuggestion = null;
 let isGodMode = false;
+let currentGodSuggestion = null;
 let zoomLevel = 1.0;
 let initialPinchDistance = null;
 let isDragging = false;
@@ -37,7 +37,6 @@ let width, height;
 const canvas = document.getElementById('gwlCanvas');
 const ctx = canvas.getContext('2d');
 
-// UI Elemente
 const introOverlay = document.getElementById('intro-overlay');
 const nameModal = document.getElementById('name-modal');
 const nameInput = document.getElementById('player-name-input');
@@ -62,7 +61,6 @@ const btns = {
 const ratingIcons = { 0: "👍", 1: "👎", 2: "❓", 3: "➖" };
 const ratingColors = { 0: "#00ff64", 1: "#ff4d4d", 2: "#ffcc00", 3: "#888888" };
 
-// --- DER SEMANTISCHE GRAPH ---
 const semanticGraph = {
     "Liebe": { allies: ["Verbindung", "Geist", "Materie", "Nähe"], enemies: ["Hass", "Gleichgültigkeit"] },
     "Wille": { allies: ["Schaffen", "Freiheit", "Materie", "Macht", "Kraft", "Stärke", "Intelligenz"], enemies: ["Zufall", "Chaos"] },
@@ -140,30 +138,27 @@ function initGame() {
 }
 
 function resize() {
-    width = canvas.width = document.documentElement.clientWidth || window.innerWidth;
-    height = canvas.height = document.documentElement.clientHeight || window.innerHeight;
+    width = canvas.width = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    height = canvas.height = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
     isLandscape = width > height;
     if (activeItem) updateUI();
 }
 window.addEventListener('resize', resize);
 
 function startPlayerTurn() {
-    requestFullscreenMode(); // <-- Diese Zeile hier einfügen
+    requestFullscreenMode(); // Startet Vollbild
     
     let rawName = nameInput.value.trim();
     currentPlayer = rawName === "" ? "Du" : rawName;
-
     
     nameModal.classList.remove('active');
     playerDisplay.innerText = `Spieler: ${currentPlayer}`;
     
     loadDatabase(); 
-    
     coherenceScore = 50;
     updateScoreUI();
     stopAll(); 
     
-    // Personalisiere alle Konsens-Aussagen
     items.forEach(item => {
         if (item.text.includes("Konsens")) {
             item.text = `Konsens = ${currentPlayer} ⋈ KI`;
@@ -173,7 +168,7 @@ function startPlayerTurn() {
     const playerCount = Object.keys(allPlayersData).length;
     kiText.innerText = `Willkommen, ${currentPlayer}. Du bist der ${playerCount}. Spieler in diesem Universum. Jede deiner Bewertungen verbindet sich mit den Meinungen der Mitspieler im Raum. Jede Meinung wird ein Teil unserer Wahrheit.`;
     kiPanel.classList.add('active');
-    setTimeout(() => { kiPanel.classList.remove('active'); }, 7000);
+    setTimeout(() => { kiPanel.classList.remove('active'); }, 12000);
 }
 
 function switchPlayer() {
@@ -185,6 +180,31 @@ function switchPlayer() {
     nameInput.value = "";
     document.getElementById('name-modal-title').innerText = "Nächster Spieler?";
     nameModal.classList.add('active');
+}
+
+function requestFullscreenMode() {
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(err => console.log("Fullscreen-Fehler:", err));
+    } else if (docEl.webkitRequestFullscreen) { 
+        docEl.webkitRequestFullscreen();
+    } else if (docEl.mozRequestFullScreen) { 
+        docEl.mozRequestFullScreen();
+    } else if (docEl.msRequestFullscreen) { 
+        docEl.msRequestFullscreen();
+    }
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
 }
 
 function toggleGodMode() {
@@ -209,6 +229,7 @@ function toggleGodMode() {
         setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
     }
 }
+
 function godReject(reason) {
     if (!activeItem) return;
 
@@ -232,15 +253,55 @@ function godReject(reason) {
     kiText.innerText = `KI: Du weist "${originalText}" zurück. ${explanation} Vorschlag: "${newText}"`;
     kiPanel.classList.add('active');
     
-    // NEU: Global speichern
     currentGodSuggestion = newText;
 }
 
-    kiText.innerText = `KI: Du weist "${originalText}" zurück. ${explanation} Vorschlag: "${newText}"`;
-    kiPanel.classList.add('active');
+function acceptGodSuggestion() {
+    if (!activeItem || !currentGodSuggestion) {
+        kiText.innerText = "Es gibt noch keinen Vorschlag. Bitte weise die Aussage zuerst zurück (❌, 🧩 oder 🪜).";
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
+        return;
+    }
+
+    if (!activeItem.originalGodText) {
+        activeItem.originalGodText = activeItem.text;
+    }
+
+    activeItem.text = currentGodSuggestion;
+    activeItem.stateIndex = 0; 
+    activeItem.isActive = false;
+    activeItem.opacity = 0; 
     
-    // Der Vorschlag wird im aktiven Element gespeichert
-    activeItem.suggestedText = newText;
+    kiText.innerText = `Vorschlag angenommen! Die Aussage heißt jetzt: "${currentGodSuggestion}".`;
+    kiPanel.classList.add('active');
+    setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
+    
+    currentGodSuggestion = null; 
+    updateScoreUI();
+    selectItem(null); 
+}
+
+function undoGodSuggestion() {
+    if (!activeItem || !activeItem.originalGodText) {
+        kiText.innerText = "Es gibt keinen Vorschlag, der rückgängig gemacht werden kann.";
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
+        return;
+    }
+
+    activeItem.text = activeItem.originalGodText;
+    activeItem.stateIndex = 3; 
+    activeItem.isActive = true;
+    activeItem.opacity = 1; 
+    
+    kiText.innerText = `Rückgängig gemacht! Die Aussage heißt wieder: "${activeItem.text}".`;
+    kiPanel.classList.add('active');
+    setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
+    
+    activeItem.originalGodText = undefined;
+    updateScoreUI();
+    selectItem(null);
 }
 
 // --- DATENBANK ---
@@ -598,7 +659,6 @@ function selectItem(item) {
     if (item) {
         item.isSelected = true;
         activeItem = item;
-        
         item.z = 50; 
         
         items.sort((a, b) => {
@@ -961,77 +1021,6 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
         this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
         this.closePath(); return this;
     };
-}
-function requestFullscreenMode() {
-    const docEl = document.documentElement;
-    
-    // Prüfen, welcher Browser-Standard unterstützt wird
-    if (docEl.requestFullscreen) {
-        docEl.requestFullscreen().catch(err => console.log("Fullscreen-Fehler:", err));
-    } else if (docEl.webkitRequestFullscreen) { // Safari / Ältere Chrome
-        docEl.webkitRequestFullscreen();
-    } else if (docEl.mozRequestFullScreen) { // Firefox
-        docEl.mozRequestFullScreen();
-    } else if (docEl.msRequestFullscreen) { // Alte Edge / IE
-        docEl.msRequestFullscreen();
-    }
-}
-function acceptGodSuggestion() {
-    if (!activeItem || !currentGodSuggestion) {
-        kiText.innerText = "Es gibt noch keinen Vorschlag. Bitte weise die Aussage zuerst zurück (❌, 🧩 oder 🪜).";
-        kiPanel.classList.add('active');
-        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
-        return;
-    }
-
-    activeItem.text = currentGodSuggestion;
-    activeItem.stateIndex = 0; 
-    activeItem.isActive = false;
-    activeItem.opacity = 0; // Aussage ausblenden
-    
-    kiText.innerText = `Vorschlag angenommen! Die Aussage heißt jetzt: "${currentGodSuggestion}".`;
-    kiPanel.classList.add('active');
-    setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
-    
-    currentGodSuggestion = null; // Vorschlag leeren
-    updateScoreUI();
-    selectItem(null); // Menü schließen
-}
-
-    
-
-function undoGodSuggestion() {
-    if (!activeItem || !activeItem.originalGodText) {
-        kiText.innerText = "Es gibt keinen Vorschlag, der rückgängig gemacht werden kann.";
-        kiPanel.classList.add('active');
-        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
-        return;
-    }
-
-    activeItem.text = activeItem.originalGodText;
-    activeItem.stateIndex = 3; 
-    activeItem.isActive = true;
-    activeItem.opacity = 1; 
-    
-    kiText.innerText = `Rückgängig gemacht! Die Aussage heißt wieder: "${activeItem.text}".`;
-    kiPanel.classList.add('active');
-    setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
-    
-    activeItem.originalGodText = undefined;
-    updateScoreUI();
-    selectItem(null);
-}
-
-function exitFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-    }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
