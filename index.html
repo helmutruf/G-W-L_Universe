@@ -118,13 +118,22 @@
     </div>
 
     <div id="rating-panel">
-        <div id="selected-text">Aussage auswählen...</div>
-        <div class="button-row">
-            <button class="rate-btn" id="btn-like" onclick="setRating(0)">👍</button>
-            <button class="rate-btn" id="btn-dislike" onclick="setRating(1)">👎</button>
-            <button class="rate-btn" id="btn-unsure" onclick="setRating(2)">❓</button>
-            <button class="rate-btn" id="btn-neutral" onclick="setRating(3)">➖</button>
-        </div>
+    <div id="selected-text">Aussage auswählen...</div>
+    
+    <!-- Die normalen Bewertungs-Buttons -->
+    <div class="button-row" id="normal-buttons">
+        <button class="rate-btn" id="btn-like" onclick="setRating(0)">👍</button>
+        <button class="rate-btn" id="btn-dislike" onclick="setRating(1)">👎</button>
+        <button class="rate-btn" id="btn-unsure" onclick="setRating(2)">❓</button>
+        <button class="rate-btn" id="btn-neutral" onclick="setRating(3)">➖</button>
+    </div>
+    
+    <!-- Die neuen Gott-Modus-Buttons (anfangs versteckt) -->
+    <div class="button-row" id="god-buttons" style="display: none; margin-top: 10px;">
+        <button class="rate-btn" id="btn-false" onclick="godReject('falsch')" style="border-color: #ff4d4d; color: #ff4d4d; font-size: 16px; line-height: 1.2;">❌<br><span style="font-size: 10px;">Falsch</span></button>
+        <button class="rate-btn" id="btn-unfit" onclick="godReject('unpassend')" style="border-color: #ffcc00; color: #ffcc00; font-size: 16px; line-height: 1.2;">🧩<br><span style="font-size: 10px;">Unpassend</span></button>
+        <button class="rate-btn" id="btn-collision" onclick="godReject('kollision')" style="border-color: #9b30ff; color: #9b30ff; font-size: 16px; line-height: 1.2;">🪜<br><span style="font-size: 10px;">Ebene</span></button>
+    </div>
     </div>
 
     <div id="table-modal">
@@ -157,6 +166,9 @@
     <div id="control-bar">
         <button class="ctrl-btn" onclick="startAIChallenge()">
             <span>🤖</span><span class="ctrl-label">KI-ZUG</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleGodMode()">
+    <span>👑</span><span class="ctrl-label">GOTT-MODUS</span>
         </button>
         <button class="ctrl-btn" onclick="undoRating()">
             <span>↶</span><span class="ctrl-label">UNDO</span>
