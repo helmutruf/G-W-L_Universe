@@ -34,7 +34,7 @@ canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
     background: rgba(10, 15, 30, 0.95);
     border-top: 1px solid #4da6ff;
     display: flex; 
-    justify-content: center; /* DAS ist der entscheidende Befehl */
+    justify-content: center; /* Zentriert die Buttons */
     gap: 15px; /* Abstand zwischen den Buttons */
     align-items: center;
     padding: 10px 0;
