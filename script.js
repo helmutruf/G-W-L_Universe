@@ -889,67 +889,6 @@ function switchPlayer() {
     document.getElementById('name-modal-title').innerText = "Nächster Spieler?";
     nameModal.classList.add('active');
 }
-function godReject(reason) {
-    if (!activeItem) return;
-
-    let originalText = activeItem.text;
-    let newText = originalText;
-    let explanation = "";
-
-    // Die KI versucht, die Aussage basierend auf dem Grund umzuformulieren
-    if (reason === 'falsch') {
-        // 1. Falsch: Operator invertieren
-        if (originalText.includes(" = ")) {
-            newText = originalText.replace(" = ", " ≠ ");
-        } else if (originalText.includes(" ≠ ")) {
-            newText = originalText.replace(" ≠ ", " = ");
-        } else if (originalText.includes(" ⋈ ")) {
-            newText = originalText.replace(" ⋈ ", " ⋈¬ "); // Negation der Verbindung
-        } else {
-            newText = "Nicht (" + originalText + ")";
-        }
-        explanation = "Ich habe den Operator invertiert, um die logische Wahrheit zu korrigieren.";
-        
-    } else if (reason === 'unpassend') {
-        // 2. Unpassend: Das Subjekt gegen ein passenderes Nukleus austauschen
-        // Wir suchen ein Nukleus aus dem semantischen Graphen und ersetzen das erste Wort
-        let words = originalText.split(" ");
-        let firstWord = words[0];
-        
-        if (semanticGraph[firstWord]) {
-            // Nimm einen Verbündeten, der besser passt (einfacher Zufall für den Prototyp)
-            let allies = semanticGraph[firstWord].allies;
-            if (allies.length > 0) {
-                let betterAlly = allies[Math.floor(Math.random() * allies.length)];
-                words[0] = betterAlly;
-                newText = words.join(" ");
-            }
-        } else {
-            newText = originalText + " [Kontext unklar]";
-        }
-        explanation = "Kontextuell unpassend. Ich habe das Subjekt durch ein verwandtes Nukleus ersetzt.";
-
-    } else if (reason === 'kollision') {
-        // 3. Ebenenkollision: Eine Zwischenebene einfügen
-        if (originalText.includes(" = ")) {
-            newText = originalText.replace(" = ", " ⋈ Geist = ");
-        } else if (originalText.includes(" → ")) {
-            newText = originalText.replace(" → ", " ⋈ Wille → ");
-        } else {
-            newText = originalText + " (auf höherer Ebene)";
-        }
-        explanation = "Ebenenkollision erkannt. Ich habe eine vermittelnde Zwischenebene (Geist/Wille) eingefügt.";
-    }
-
-    // Die KI präsentiert ihren Vorschlag
-    kiText.innerText = `KI: Du weist "${originalText}" als "${reason}" zurück. ${explanation} Mein Vorschlag: "${newText}"`;
-    kiPanel.classList.add('active');
-    
-    // Optional: Wir speichern den Vorschlag temporär, damit der Spieler ihn annehmen kann
-    activeItem.suggestedText = newText;
-    
-    // Hier müssten wir dem Spieler die Möglichkeit geben, den Vorschlag zu akzeptieren (z.B. mit einem neuen Button)
-    }
 window.addEventListener('DOMContentLoaded', () => {
     resize();
     initGame();
