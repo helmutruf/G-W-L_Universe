@@ -998,23 +998,39 @@ function acceptGodSuggestion() {
     selectItem(null); // Menü schließen
 }
 
-    // Den Vorschlag der KI als neue Aussage akzeptieren
-    const newText = activeItem.suggestedText;
-    activeItem.text = newText;
-    activeItem.suggestedText = undefined; // Vorschlag löschen
     
-    // Die Aussage ist nun "wahr" (grün) und bleibt im Raum
-    activeItem.stateIndex = 0; 
+function undoGodSuggestion() {
+    if (!activeItem || !activeItem.originalGodText) {
+        kiText.innerText = "Es gibt keinen Vorschlag, der rückgängig gemacht werden kann.";
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
+        return;
+    }
+
+    activeItem.text = activeItem.originalGodText;
+    activeItem.stateIndex = 3; 
+    activeItem.isActive = true;
+    activeItem.opacity = 1; 
     
-    kiText.innerText = `Vorschlag angenommen! Die Aussage heißt jetzt: "${newText}". Sie ist nun Teil des Anschauungsraums.`;
+    kiText.innerText = `Rückgängig gemacht! Die Aussage heißt wieder: "${activeItem.text}".`;
     kiPanel.classList.add('active');
-    setTimeout(() => { kiPanel.classList.remove('active'); }, 6000);
+    setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
     
-    // Score aktualisieren, da sich das Weltbild geändert hat
+    activeItem.originalGodText = undefined;
     updateScoreUI();
-    
-    // Auswahl aufheben, damit das Menü schließt
     selectItem(null);
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
 }
 window.addEventListener('DOMContentLoaded', () => {
     resize();
