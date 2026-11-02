@@ -217,8 +217,10 @@ function changeOldRating(entry) {
         const item = items.find(i => i.id === entry.itemId);
         if (item) {
             item.stateIndex = 3; 
+            item.previousRating = entry.rating;
             item.isActive = true; 
             item.opacity = 0;
+            item.previousRating = entry.rating;
             item.x = (Math.random() - 0.5) * (width * 0.8);
             item.baseY = (Math.random() - 0.5) * (height * 0.8);
         }
@@ -410,6 +412,7 @@ function setRating(state) {
     activeItem.stateIndex = state;
     activeItem.isActive = false; 
     activeItem.opacity = 0; // NEU: Die Aussage sofort unsichtbar machen
+    activeItem.previousRating = undefined; // NEU: Markierung löschen, da neu bewertet
     activeItem.isSelected = false; 
 
     history.push({ oldId, newId, state, dbEntry, wasChallenge });
@@ -441,7 +444,7 @@ function kiReaction(item) {
             }
         }
         
-        kiText.innerText = "Die " + entities.length + " Mitspieler flüstern dir zu... " + comment;
+        kiText.innerText = " " + entities.length + " Mitspieler flüstern dir zu... " + comment;
         kiPanel.classList.add('active');
         setTimeout(() => { kiPanel.classList.remove('active'); }, 9000); 
     }
@@ -729,7 +732,7 @@ function triggerEndgame() {
 }
 
 function restartGame() {
-    document.getElementById('endgame-modal').classList.remove('active');
+    document.getElementById('endgame-text').innerText = `Du hast alle ${statements.length} Aussagen bewertet, ${currentPlayer}. Dein Kohärenz-Score liegt bei ${coherenceScore} Punkten. Aus deinen Entscheidungen und den Meinungen der Mitspieler entsteht einzigartiger Anschauungsraum. Jede Meinung wurde ein Teil deiner Wahrheit.`;
     coherenceScore = 50;
     updateScore(0);
     stopAll();
@@ -849,6 +852,12 @@ function drawSpruchband(item, x, y, scale, rotation, dimFactor) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.shadowBlur = 10 * finalScale * item.weight; ctx.shadowColor = item.color;
     ctx.fillText(item.text, 0, 0);
+    // NEU: Alte Bewertung anzeigen, wenn vorhanden
+if (item.previousRating !== undefined && !item.isSelected) {
+    ctx.fillStyle = "#ffcc00"; // Gold
+    ctx.font = `${fontSize * 0.6}px Arial`;
+    ctx.fillText("War: " + ratingIcons[item.previousRating], 0, fontSize + 10); 
+}
     ctx.restore();
 }
 
