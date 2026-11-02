@@ -143,20 +143,24 @@ function startPlayerTurn() {
     playerDisplay.innerText = `Spieler: ${currentPlayer}`;
     
     loadDatabase(); 
+    
     coherenceScore = 50;
     updateScoreUI();
     stopAll(); 
     
-    kiText.innerText = `Willkommen, ${currentPlayer}. Jede deiner Bewertungen verbindet sich mit den Meinungen der Entitäten im Raum. Jede Meinung wird ein Teil unserer Wahrheit.`;
+    // Personalisiere ALLE Aussagen, die das Wort "Konsens" enthalten
+    items.forEach(item => {
+        if (item.text.includes("Konsens")) {
+            item.text = `Konsens = ${currentPlayer} ⋈ KI`;
+        }
+    });
+    
+    const playerCount = Object.keys(allPlayersData).length;
+    kiText.innerText = `Willkommen, ${currentPlayer}. Du bist der ${playerCount}. Spieler in diesem Universum. Jede deiner Bewertungen verbindet sich mit den Meinungen der Mitspieler im Raum. Jede Meinung wird ein Teil unserer Wahrheit.`;
     kiPanel.classList.add('active');
     setTimeout(() => { kiPanel.classList.remove('active'); }, 7000);
 }
 
-function switchPlayer() {
-    nameInput.value = "";
-    document.getElementById('name-modal-title').innerText = "Nächster Spieler?";
-    nameModal.classList.add('active');
-}
 
 function loadDatabase() {
     const saved = localStorage.getItem(DB_KEY);
