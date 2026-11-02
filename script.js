@@ -507,7 +507,7 @@ function selectItem(item) {
         activeItem = item;
         
         // Die Aussage ganz nach vorne holen (vor das UI)
-        item.z = -900; 
+        item.z = 50; 
         
         items.sort((a, b) => {
             if (a.id === item.id) return 1;
