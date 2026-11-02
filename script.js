@@ -724,7 +724,7 @@ function handlePointerMove(x, y) {
 function handlePointerUp() { isDragging = false; }
 
 function triggerEndgame() {
-    document.getElementById('endgame-text').innerText = `Du hast alle ${statements.length} Aussagen bewertet, ${currentPlayer}. Dein Kohärenz-Score liegt bei ${coherenceScore} Punkten. Aus deinen Entscheidungen und den Meinungen der Entitäten ist ein einzigartiger Anschauungsraum entstanden. Jede Meinung wurde ein Teil deiner Wahrheit.`;
+    document.getElementById('endgame-text').innerText = `Du hast alle ${statements.length} Aussagen bewertet, ${currentPlayer}. Dein Kohärenz-Score liegt bei ${coherenceScore} Punkten. Aus deinen Entscheidungen und den Meinungen aller Mitspieler ist ein einzigartiger Anschauungsraum entstanden. Jede Meinung wurde ein Teil deiner Wahrheit.`;
     document.getElementById('endgame-modal').classList.add('active');
 }
 
