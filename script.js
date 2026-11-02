@@ -68,6 +68,7 @@ const semanticGraph = {
     "Macht": { allies: ["Wille", "Fokus"], enemies: ["Ohnmacht"] },
     "Kraft": { allies: ["Wille", "Schaffen"], enemies: ["Schwäche"] },
     "Stärke": { allies: ["Wille", "Liebe"], enemies: ["Zweifel"] }
+    "Intelligenz": { allies: ["Geist", "Wille"], enemies: ["Dummheit", "Chaos"] },
 };
 
 const statements = [
@@ -93,7 +94,9 @@ const statements = [
     { text: "Kraft ⊂ Wille (neutrum)", color: "#ffffff", size: 18, weight: 1 },
     { text: "Stärke ⊂ Wille (weiblich)", color: "#4da6ff", size: 18, weight: 1 },
     { text: "Wille = Macht + Kraft + Stärke", color: "#ffcc00", size: 20, weight: 2 }
-];
+    { text: "Wille x Geist = Intelligenz", color: "#ffcc00", size: 20, weight: 2 },
+    
+    ];
 
 let items = [];
 
