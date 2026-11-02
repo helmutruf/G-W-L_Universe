@@ -1000,6 +1000,7 @@ function acceptGodSuggestion() {
 
     
 function undoGodSuggestion() {
+function undoGodSuggestion() {
     if (!activeItem || !activeItem.originalGodText) {
         kiText.innerText = "Es gibt keinen Vorschlag, der rückgängig gemacht werden kann.";
         kiPanel.classList.add('active');
@@ -1032,6 +1033,7 @@ function exitFullscreen() {
         document.msExitFullscreen();
     }
 }
+
 window.addEventListener('DOMContentLoaded', () => {
     resize();
     initGame();
