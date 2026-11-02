@@ -531,7 +531,7 @@ function kiReaction(item) {
             }
         }
         
-        kiText.innerText = "Die " + entities.length + " Mitspieler flüstern dir zu... " + comment;
+        kiText.innerText = "Die " + Object.keys(allPlayersData).length + " Mitspieler flüstern dir zu... " + comment;
         kiPanel.classList.add('active');
         setTimeout(() => { kiPanel.classList.remove('active'); }, 9000); 
     }
