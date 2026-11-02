@@ -607,7 +607,7 @@ function selectItem(item) {
         item.isSelected = true;
         activeItem = item;
         
-        item.z = -900; 
+        item.z = 50; 
         
         items.sort((a, b) => {
             if (a.id === item.id) return 1;
