@@ -1,5 +1,6 @@
 // --- VARIABLEN ---
 let activeItem = null; 
+let currentGodSuggestion = null;
 let isGodMode = false;
 let zoomLevel = 1.0;
 let initialPinchDistance = null;
@@ -227,6 +228,13 @@ function godReject(reason) {
         newText = originalText + " (auf höherer Ebene)";
         explanation = "Ich habe eine Zwischenebene eingefügt.";
     }
+
+    kiText.innerText = `KI: Du weist "${originalText}" zurück. ${explanation} Vorschlag: "${newText}"`;
+    kiPanel.classList.add('active');
+    
+    // NEU: Global speichern
+    currentGodSuggestion = newText;
+}
 
     kiText.innerText = `KI: Du weist "${originalText}" zurück. ${explanation} Vorschlag: "${newText}"`;
     kiPanel.classList.add('active');
@@ -969,12 +977,26 @@ function requestFullscreenMode() {
     }
 }
 function acceptGodSuggestion() {
-    if (!activeItem || !activeItem.suggestedText) {
-        kiText.innerText = "Es gibt noch keinen Vorschlag, den ich annehmen könnte. Weisen Sie zuerst eine Aussage zurück (❌, 🧩 oder 🪜).";
+    if (!activeItem || !currentGodSuggestion) {
+        kiText.innerText = "Es gibt noch keinen Vorschlag. Bitte weise die Aussage zuerst zurück (❌, 🧩 oder 🪜).";
         kiPanel.classList.add('active');
-        setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
         return;
     }
+
+    activeItem.text = currentGodSuggestion;
+    activeItem.stateIndex = 0; 
+    activeItem.isActive = false;
+    activeItem.opacity = 0; // Aussage ausblenden
+    
+    kiText.innerText = `Vorschlag angenommen! Die Aussage heißt jetzt: "${currentGodSuggestion}".`;
+    kiPanel.classList.add('active');
+    setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
+    
+    currentGodSuggestion = null; // Vorschlag leeren
+    updateScoreUI();
+    selectItem(null); // Menü schließen
+}
 
     // Den Vorschlag der KI als neue Aussage akzeptieren
     const newText = activeItem.suggestedText;
