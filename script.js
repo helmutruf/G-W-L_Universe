@@ -984,6 +984,32 @@ function requestFullscreenMode() {
         docEl.msRequestFullscreen();
     }
 }
+function acceptGodSuggestion() {
+    if (!activeItem || !activeItem.suggestedText) {
+        kiText.innerText = "Es gibt noch keinen Vorschlag, den ich annehmen könnte. Weisen Sie zuerst eine Aussage zurück (❌, 🧩 oder 🪜).";
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
+        return;
+    }
+
+    // Den Vorschlag der KI als neue Aussage akzeptieren
+    const newText = activeItem.suggestedText;
+    activeItem.text = newText;
+    activeItem.suggestedText = undefined; // Vorschlag löschen
+    
+    // Die Aussage ist nun "wahr" (grün) und bleibt im Raum
+    activeItem.stateIndex = 0; 
+    
+    kiText.innerText = `Vorschlag angenommen! Die Aussage heißt jetzt: "${newText}". Sie ist nun Teil des Anschauungsraums.`;
+    kiPanel.classList.add('active');
+    setTimeout(() => { kiPanel.classList.remove('active'); }, 6000);
+    
+    // Score aktualisieren, da sich das Weltbild geändert hat
+    updateScoreUI();
+    
+    // Auswahl aufheben, damit das Menü schließt
+    selectItem(null);
+}
 window.addEventListener('DOMContentLoaded', () => {
     resize();
     initGame();
