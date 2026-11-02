@@ -20,7 +20,7 @@ let currentPlayer = "Du";
 let allPlayersData = {}; 
 const DB_KEY = 'gwl_multiplayer_db_v1';
 let particles = []; 
-
+let isGodMode = false;
 const entities = [
     { id: 'e1', x: 0, y: 0, color: '#4da6ff', vx: 0, vy: 0 }, 
     { id: 'e2', x: 0, y: 0, color: '#ff4d4d', vx: 0, vy: 0 }, 
