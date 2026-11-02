@@ -208,7 +208,6 @@ function toggleGodMode() {
         setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
     }
 }
-
 function godReject(reason) {
     if (!activeItem) return;
 
@@ -219,35 +218,20 @@ function godReject(reason) {
     if (reason === 'falsch') {
         if (originalText.includes(" = ")) { newText = originalText.replace(" = ", " ≠ "); }
         else if (originalText.includes(" ≠ ")) { newText = originalText.replace(" ≠ ", " = "); }
-        else if (originalText.includes(" ⋈ ")) { newText = originalText.replace(" ⋈ ", " ⋈¬ "); }
         else { newText = "Nicht (" + originalText + ")"; }
-        explanation = "Ich habe den Operator invertiert, um die logische Wahrheit zu korrigieren.";
-        
+        explanation = "Ich habe den Operator invertiert.";
     } else if (reason === 'unpassend') {
-        let words = originalText.split(" ");
-        let firstWord = words[0];
-        
-        if (semanticGraph[firstWord]) {
-            let allies = semanticGraph[firstWord].allies;
-            if (allies.length > 0) {
-                let betterAlly = allies[Math.floor(Math.random() * allies.length)];
-                words[0] = betterAlly;
-                newText = words.join(" ");
-            }
-        } else {
-            newText = originalText + " [Kontext unklar]";
-        }
-        explanation = "Kontextuell unpassend. Ich habe das Subjekt durch ein verwandtes Nukleus ersetzt.";
-
+        newText = originalText + " (Kontext prüfen)";
+        explanation = "Ich schlage eine kontextuelle Anpassung vor.";
     } else if (reason === 'kollision') {
-        if (originalText.includes(" = ")) { newText = originalText.replace(" = ", " ⋈ Geist = "); }
-        else if (originalText.includes(" → ")) { newText = originalText.replace(" → ", " ⋈ Wille → "); }
-        else { newText = originalText + " (auf höherer Ebene)"; }
-        explanation = "Ebenenkollision erkannt. Ich habe eine vermittelnde Zwischenebene (Geist/Wille) eingefügt.";
+        newText = originalText + " (auf höherer Ebene)";
+        explanation = "Ich habe eine Zwischenebene eingefügt.";
     }
 
-    kiText.innerText = `KI: Du weist "${originalText}" als "${reason}" zurück. ${explanation} Mein Vorschlag: "${newText}"`;
+    kiText.innerText = `KI: Du weist "${originalText}" zurück. ${explanation} Vorschlag: "${newText}"`;
     kiPanel.classList.add('active');
+    
+    // Der Vorschlag wird im aktiven Element gespeichert
     activeItem.suggestedText = newText;
 }
 
