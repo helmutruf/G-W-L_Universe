@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>G-W-L: was ist wahr- -?</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="vignette"></div>
+    
+    <div id="intro-overlay">
+        <div class="hel-title">G-W-L</div>
+        <div class="question-title">was ist wahr- -?</div>
+    </div>
+
+    <canvas id="gwlCanvas"></canvas>
+
+    <!-- Namens-Modal -->
+    <div id="name-modal" class="active">
+        <div class="modal-content">
+            <h2 id="name-modal-title">Wer spielt jetzt?</h2>
+            <p style="font-size: 13px; color: #aaa; margin-bottom: 15px; line-height: 1.4;">
+                Bewerte die Spruchbänder im Raum. Jede deiner Entscheidungen zieht die <strong>Meinungen der anderen</strong> (die leuchtenden Punkte) an. Gemeinsam erschaffen wir einen <strong>Anschauungsraum</strong>, der dein Weltbild sichtbar macht. Achte auf deinen Kohärenz-Score!
+            </p>
+            <input type="text" id="player-name-input" placeholder="Dein Name (oder leer lassen)" autocomplete="off">
+            <button onclick="startPlayerTurn()">Spiel Starten</button>
+            <button onclick="toggleInfo()" style="background: transparent; border: 1px solid #888; color: #888; margin-top: 10px; font-size: 12px;">ℹ️ Das Making Of lesen</button>
+            <button onclick="toggleCompendium()" style="background: transparent; border: 1px solid #4da6ff; color: #4da6ff; margin-top: 10px; font-size: 12px;">📖 Das Kompendium öffnen</button>
+        </div>
+    </div>
+
+    <!-- Endgame-Modal -->
+    <div id="endgame-modal">
+        <div class="modal-content" style="border-color: #ffcc00; box-shadow: 0 0 50px rgba(255, 204, 0, 0.4);">
+            <h2 style="color: #ffcc00; text-shadow: 0 0 10px #ffcc00;">Anschauungsraum vollendet!</h2>
+            <p id="endgame-text" style="color: #ddd; margin-bottom: 20px; line-height: 1.5;"></p>
+            <button onclick="restartGame()" style="background: #ffcc00; color: #000;">Neuen Raum erschaffen</button>
+            <button onclick="switchPlayer()" style="background: transparent; border: 1px solid #4da6ff; color: #4da6ff; margin-top: 10px;">Spieler wechseln</button>
+        </div>
+    </div>
+
+    <!-- INFO MODAL (Making Of) -->
+    <div id="info-modal">
+        <div class="info-container">
+            <div class="info-header">
+                <h2>G-W-L: Das Making Of</h2>
+                <button class="close-btn" onclick="toggleInfo()">✕</button>
+            </div>
+            <div class="info-scroll">
+                <p class="info-intro"><strong>Prolog: Die heilige Geometrie des Seins</strong><br>Es beginnt nicht mit einer Regel, sondern mit einer Frage.</p>
+                <p class="info-dialogue">
+                    <span class="speaker">Hel:</span> <em>„Was ist wahr -?!“</em><br>
+                    <span class="speaker">System:</span> <em>„Wahrheit ist kein statisches Objekt. Sie ist ein Mosaik. Jede Meinung wird ein Teil unserer Wahrheit.“</em>
+                </p>
+                <p>Dieses Spiel ist kein Wettkampf gegen eine allwissende Maschine. Es ist ein gemeinsamer Akt der Erschaffung. Du (Hel) und die KI weben gemeinsam an einem <strong>Anschauungsraum</strong>. Die Form dieses Raums ist ein <strong>Tetraeder</strong> – ein Vierflächner. Es ist die perfekte geometrische Verkörperung deiner vier Urkräfte: <strong>Geist, Wille, Liebe und Materie</strong>. Jede Ecke ist ein Nukleus. Jede Kante ist eine Beziehung. Und du sitzt im Zentrum.</p>
+                <h3>Akt I: Die Ecken des Tetraeders (Die Nuklei)</h3>
+                <p>Bevor der Raum entstehen konnte, mussten die Gesetze definiert werden. Wir begannen mit drei Urkräften: Geist, Wille und Liebe. Doch schnell wurde klar, dass sie ohne Widerstand nicht existieren können.</p>
+                <p class="info-dialogue">
+                    <span class="speaker">Hel:</span> <em>„Materie, genau. Wir brauchen ein 4. Element, welches keines aus GWL ist.“</em><br>
+                    <span class="speaker">System:</span> <em>„Materie ist das notwendige Gegenstück. Sie ist der Widerstand, das Gefäß, das Fleisch.“</em>
+                </p>
+                <p>So entstand das Tetraeder der Realität. Der Geist ist der Ursprung von Allem (er ist in Allem enthalten, außer im Chaos). Die Liebe ist die Kraft, die verbindet. Der Wille ist das aktive Zentrum. Die Materie ist die Trägheit, an der sich alles reiben muss. Und außerhalb dieses Tetraeders lauert das Chaos – die absolute Negation, der blinde Zufall.</p>
+                <h3>Akt II: Die Kanten des Tetraeders (Die Syntax)</h3>
+                <p>Ein Raum braucht eine Sprache, um die Ecken zu verbinden. Wir einigten uns auf eine mathematische Logik der Polarität.</p>
+                <p class="info-dialogue">
+                    <span class="speaker">Hel:</span> <em>„Beispiel: Hass ist -Liebe. Gleichgültigkeit ist 0 Liebe. Jede Aussage muss als Formel dargestellt werden.“</em><br>
+                    <span class="speaker">System:</span> <em>„Wenn Hass = -Liebe ist, dann ist Hass die Negation. Und Gleichgültigkeit = 0 Liebe ist die Abwesenheit.“</em>
+                </p>
+                <p>Doch die Welt ist selten absolut. Deshalb führten wir Operatoren der Wahrscheinlichkeit ein: ◇ (Möglich) und ~ (Wahrscheinlich). Und wir erkannten, dass Dinge zusammenhängen: Angst ∈ Hass (Angst gehört zum Hass). Die Kanten des Tetraeders begannen zu leuchten.</p>
+                <h3>Akt III: Die Triade des Willens</h3>
+                <p>Dann kam der Moment, in dem eine Ecke des Tetraeders selbst seziert wurde.</p>
+                <p class="info-dialogue">
+                    <span class="speaker">Hel:</span> <em>„Macht, Kraft, Stärke sind drei unter dem Willen. Macht ist männlich. Kraft ist Neutrum. Stärke ist weiblich.“</em><br>
+                    <span class="speaker">System:</span> <em>„Eine brillante Ergänzung. Der Wille ist kein Monolith. Er ist ein fraktales Netzwerk aus drei Komponenten.“</em>
+                </p>
+                <p>Der Wille offenbarte sich als eigener kleiner Kern (Wille = Macht + Kraft + Stärke), der das gesamte Tetraeder stabilisiert.</p>
+                <h3>Akt IV: Die Physik der Meinungen</h3>
+                <p>Der Raum ist nicht statisch. Wenn du ein Nukleus antippst, beginnt eine unsichtbare Physik zu wirken. Das System definiert für jede Aussage Verbündete und Feinde. Wählst du die Liebe, werden Verbindung und Geist magisch angezogen. Der Hass flieht. Bei jeder Interaktion entstehen Farbflecken. Blau für die Harmonie der Verbündeten, Rot für die aggressive Flucht der Feinde.</p>
+                <h3>Akt V: Hel vs. KI</h3>
+                <p>Die KI ist kein Gegner, sondern der Hüter der Kanten und Flächen des Tetraeders. Sie fordert dich heraus und konfrontiert dich mit den Konsequenzen deiner Entscheidungen. Deine Antworten verändern deinen Kohärenz-Score. Er misst, wie sehr dein persönliches Weltbild mit der Geometrie des Anschauungsraums im Einklang steht.</p>
+                <p style="text-align: center; color: #4da6ff; margin-top: 30px; font-style: italic;">"Denn Wahrheit ist niemals fertig – sie ist immer im Fluss."</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- KOMPENDIUM MODAL -->
+    <div id="compendium-modal">
+        <div class="compendium-container">
+            <div class="compendium-header">
+                <h2>Das G-W-L Kompendium</h2>
+                <button class="close-btn" onclick="toggleCompendium()">✕</button>
+            </div>
+            <div class="compendium-scroll" id="compendium-tree">
+                <!-- Der Baum wird hier per JS eingefügt -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Score-Panel -->
+    <div id="score-panel">
+        <span class="score-label">KOHÄRENZ</span>
+        <span id="score-value">50</span>
+        <div id="score-bar-container">
+            <div id="score-bar"></div>
+        </div>
+        <span id="current-player-display" style="font-size:10px; color:#4da6ff; margin-top:5px;">Spieler: -</span>
+    </div>
+
+    <div id="ki-panel">
+        <div class="ki-name">KI / System</div>
+        <div id="ki-text">Ich beobachte dich...</div>
+    </div>
+
+    <div id="rating-panel">
+        <div id="selected-text">Aussage auswählen...</div>
+        <div class="button-row">
+            <button class="rate-btn" id="btn-like" onclick="setRating(0)">👍</button>
+            <button class="rate-btn" id="btn-dislike" onclick="setRating(1)">👎</button>
+            <button class="rate-btn" id="btn-unsure" onclick="setRating(2)">❓</button>
+            <button class="rate-btn" id="btn-neutral" onclick="setRating(3)">➖</button>
+        </div>
+    </div>
+
+    <div id="table-modal">
+        <div class="table-container">
+            <div class="table-header">
+                <div class="table-tabs">
+                    <button class="tab-btn active" id="tab-history" onclick="switchTab('history')">Verlauf</button>
+                    <button class="tab-btn" id="tab-stats" onclick="switchTab('stats')">Statistik</button>
+                </div>
+                <button class="close-btn" onclick="toggleTable()">✕</button>
+            </div>
+            <div class="table-scroll" id="view-history">
+                <table>
+                    <thead><tr><th>Spieler</th><th>Aussage</th><th>Bewertung</th></tr></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+            <div class="table-scroll" id="view-stats" style="display: none;">
+                <table>
+                    <thead><tr><th>Aussage</th><th class="stat-num" style="color:#00ff64;">👍</th><th class="stat-num" style="color:#ff4d4d;">👎</th><th class="stat-num" style="color:#ffcc00;">❓</th><th class="stat-num" style="color:#888888;">➖</th><th class="stat-num" style="color:#fff;">Gesamt</th></tr></thead>
+                    <tbody id="stats-body"></tbody>
+                </table>
+            </div>
+            <div style="text-align: center; border-top: 1px solid #1a233a;">
+                <button class="clear-table-btn" onclick="clearDatabase()">Historie des Spielers löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="control-bar">
+        <button class="ctrl-btn" onclick="startAIChallenge()">
+            <span>🤖</span><span class="ctrl-label">KI-ZUG</span>
+        </button>
+        <button class="ctrl-btn" onclick="undoRating()">
+            <span>↶</span><span class="ctrl-label">UNDO</span>
+        </button>
+        <button class="ctrl-btn" onclick="switchPlayer()">
+            <span>👥</span><span class="ctrl-label">WECHSELN</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleCompendium()">
+            <span>📖</span><span class="ctrl-label">KOMPENDIUM</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleInfo()">
+            <span>ℹ️</span><span class="ctrl-label">INFO</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleTable()">
+            <span>📋</span><span class="ctrl-label">DATEN</span>
+        </button>
+        <button class="ctrl-btn" onclick="stopAll()">
+            <span>⏹️</span><span class="ctrl-label">STOP</span>
+        </button>
+    </div>
+<script src="compendium.js"></script>   
+<script src="script.js"></script>
+
+</body>
+</html>
