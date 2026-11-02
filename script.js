@@ -144,7 +144,7 @@ function startPlayerTurn() {
     
     loadDatabase(); 
     coherenceScore = 50;
-    updateScore(0);
+    updateScoreUI();
     stopAll(); 
     
     kiText.innerText = `Willkommen, ${currentPlayer}. Jede deiner Bewertungen verbindet sich mit den Meinungen der Entitäten im Raum. Jede Meinung wird ein Teil unserer Wahrheit.`;
@@ -319,15 +319,35 @@ function startAIChallenge() {
     kiText.innerText = `${currentPlayer}, ich lege dir diese Aussage vor: "${target.text}". Ist sie absolut wahr?`;
     kiPanel.classList.add('active');
 }
+function berechneGlobaleKohaerenz() {
+    const myData = allPlayersData[currentPlayer] || [];
+    if (myData.length === 0) return 50; 
+    let score = 50;
+    myData.forEach(entry => {
+        for (const key in semanticGraph) {
+            if (entry.text.includes(key)) {
+                const node = semanticGraph[key];
+                let isAlly = node.allies.some(a => entry.text.includes(a));
+                let isEnemy = node.enemies.some(e => entry.text.includes(e));
+                if (entry.rating === 0) { 
+                    if (isAlly) score += 5;
+                    if (isEnemy) score -= 5;
+                } else if (entry.rating === 1) { 
+                    if (isAlly) score -= 5; 
+                    if (isEnemy) score += 5; 
+                }
+            }
+        }
+    });
+    if (score < 0) score = 0;
+    if (score > 100) score = 100;
+    return score;
+}
 
-function updateScore(change) {
-    coherenceScore += change;
-    if (coherenceScore < 0) coherenceScore = 0;
-    if (coherenceScore > 100) coherenceScore = 100;
-    
+function updateScoreUI() {
+    coherenceScore = berechneGlobaleKohaerenz();
     scoreValueEl.innerText = coherenceScore;
     scoreBarEl.style.width = coherenceScore + '%'; 
-    
     if (coherenceScore < 30) scoreBarEl.style.background = '#ff4d4d';
     else if (coherenceScore > 70) scoreBarEl.style.background = '#00ff64';
     else scoreBarEl.style.background = 'linear-gradient(90deg, #ff4d4d, #ffcc00, #00ff64)';
@@ -363,7 +383,7 @@ function setRating(state) {
         wasChallenge = true;
         currentChallengeItem = null;
         let scoreChange = (state === 0) ? 10 : ((state === 1) ? -10 : 0);
-        updateScore(scoreChange);
+        updateScoreUI();
         
         if (scoreChange > 0) kiText.innerText = `Kohärenz gestärkt (+${scoreChange}). Der Raum akzeptiert deine Wahrheit.`;
         else if (scoreChange < 0) kiText.innerText = `Kohärenz geschwächt (${scoreChange}). Du widersprichst dem Anschauungsraum.`;
@@ -389,7 +409,7 @@ function setRating(state) {
 
     activeItem.stateIndex = state;
     activeItem.isActive = false; 
-    activeItem.opacity = 0;
+    activeItem.opacity = 0; // NEU: Die Aussage sofort unsichtbar machen
     activeItem.isSelected = false; 
 
     history.push({ oldId, newId, state, dbEntry, wasChallenge });
@@ -399,7 +419,7 @@ function setRating(state) {
 
 function kiReaction(item) {
     if (history.length % 2 === 0 && history.length > 0 && !currentChallengeItem) { 
-        let comment = "Bewertung notiert. Derp Anschauungsraum verändert sich.";
+        let comment = "Bewertung notiert. Der Anschauungsraum verändert sich.";
         let foundNode = null;
         let foundNodeName = "";
 
@@ -437,7 +457,7 @@ function undoRating() {
         const dbIndex = allPlayersData[currentPlayer].findIndex(e => e.itemId === lastAction.oldId && e.rating === lastAction.state);
         if (dbIndex > -1) { allPlayersData[currentPlayer].splice(dbIndex, 1); saveDatabase(); }
     }
-    if (lastAction.wasChallenge) updateScore(-10); 
+    if (lastAction.wasChallenge) updateScoreUI();
     if (oldItem) { oldItem.stateIndex = 3; oldItem.isActive = true; oldItem.opacity = 0; }
     if (newItem) { newItem.isActive = false; newItem.stateIndex = 3; }
     redoStack.push(lastAction);
@@ -451,7 +471,7 @@ function redoRating() {
     const newItem = action.newId !== null ? items.find(i => i.id === action.newId) : null;
     
     if (action.dbEntry) { allPlayersData[currentPlayer].push(action.dbEntry); saveDatabase(); }
-    if (action.wasChallenge) updateScore(10);
+    if (action.wasChallenge) updateScoreUI();
     if (oldItem) { oldItem.stateIndex = action.state; oldItem.isActive = false; }
     if (newItem) { newItem.isActive = true; newItem.opacity = 0; }
     history.push(action);
@@ -486,7 +506,7 @@ function selectItem(item) {
         item.isSelected = true;
         activeItem = item;
         
-        // Karte ganz nach vorne holen (vor das UI)
+        // Die Aussage ganz nach vorne holen (vor das UI)
         item.z = -900; 
         
         items.sort((a, b) => {
