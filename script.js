@@ -146,7 +146,11 @@ function startPlayerTurn() {
     coherenceScore = 50;
     updateScoreUI();
     stopAll(); 
-    
+    // JETZT die Aussage personalisieren, nachdem stopAll() durch ist
+const konsensItem = items.find(i => i.text.includes("Konsens ="));
+if (konsensItem) {
+    konsensItem.text = `Konsens = ${currentPlayer} ⋈ KI`;
+}
     kiText.innerText = `Willkommen, ${currentPlayer}. Jede deiner Bewertungen verbindet sich mit den Meinungen der Entitäten im Raum. Jede Meinung wird ein Teil unserer Wahrheit.`;
     kiPanel.classList.add('active');
     setTimeout(() => { kiPanel.classList.remove('active'); }, 7000);
