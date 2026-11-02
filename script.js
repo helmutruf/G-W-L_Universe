@@ -828,7 +828,8 @@ function drawSpruchband(item, x, y, scale, rotation, dimFactor) {
     ctx.globalAlpha = depthAlpha * dimFactor * item.opacity;
 
     ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
-    let textWidth = ctx.measureText(item.text).width;
+    let displayText = item.text.includes("Konsens") ? `Konsens = ${currentPlayer} ⋈ KI` : item.text;
+let textWidth = ctx.measureText(displayText).width;
 
     if (item.isSelected) {
         const maxAllowedWidth = (width * 0.85) / zoomLevel; 
@@ -836,7 +837,7 @@ function drawSpruchband(item, x, y, scale, rotation, dimFactor) {
             const scaleFactor = maxAllowedWidth / textWidth; 
             fontSize *= scaleFactor;
             ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
-            textWidth = ctx.measureText(item.text).width; 
+            textWidth = ctx.measureText(displayText).width; 
         }
     }
 
