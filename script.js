@@ -875,7 +875,17 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
         this.closePath(); return this;
     };
 }
-
+function switchPlayer() {
+    // Schließe alle überlappenden Fenster
+    document.getElementById('endgame-modal').classList.remove('active');
+    document.getElementById('table-modal').classList.remove('active');
+    document.getElementById('info-modal').classList.remove('active');
+    document.getElementById('compendium-modal').classList.remove('active');
+    
+    nameInput.value = "";
+    document.getElementById('name-modal-title').innerText = "Nächster Spieler?";
+    nameModal.classList.add('active');
+}
 window.addEventListener('DOMContentLoaded', () => {
     resize();
     initGame();
