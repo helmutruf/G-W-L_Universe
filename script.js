@@ -147,8 +147,11 @@ function resize() {
 window.addEventListener('resize', resize);
 
 function startPlayerTurn() {
+    requestFullscreenMode(); // <-- Diese Zeile hier einfügen
+    
     let rawName = nameInput.value.trim();
     currentPlayer = rawName === "" ? "Du" : rawName;
+
     
     nameModal.classList.remove('active');
     playerDisplay.innerText = `Spieler: ${currentPlayer}`;
@@ -967,7 +970,20 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
         this.closePath(); return this;
     };
 }
-
+function requestFullscreenMode() {
+    const docEl = document.documentElement;
+    
+    // Prüfen, welcher Browser-Standard unterstützt wird
+    if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(err => console.log("Fullscreen-Fehler:", err));
+    } else if (docEl.webkitRequestFullscreen) { // Safari / Ältere Chrome
+        docEl.webkitRequestFullscreen();
+    } else if (docEl.mozRequestFullScreen) { // Firefox
+        docEl.mozRequestFullScreen();
+    } else if (docEl.msRequestFullscreen) { // Alte Edge / IE
+        docEl.msRequestFullscreen();
+    }
+}
 window.addEventListener('DOMContentLoaded', () => {
     resize();
     initGame();
