@@ -377,13 +377,13 @@ function setRating(state) {
             decay: 0.03
         });
     });
-
+    updateScoreUI();
     let wasChallenge = false;
     if (activeItem === currentChallengeItem) {
         wasChallenge = true;
         currentChallengeItem = null;
         let scoreChange = (state === 0) ? 10 : ((state === 1) ? -10 : 0);
-        updateScoreUI();
+        
         
         if (scoreChange > 0) kiText.innerText = `Kohärenz gestärkt (+${scoreChange}). Der Raum akzeptiert deine Wahrheit.`;
         else if (scoreChange < 0) kiText.innerText = `Kohärenz geschwächt (${scoreChange}). Du widersprichst dem Anschauungsraum.`;
