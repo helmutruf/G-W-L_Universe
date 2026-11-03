@@ -1002,3 +1002,66 @@ function draw() {
 }
 
 function drawSpruchband(item, x, y, scale, rotation, dimFactor) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    
+    const finalScale = scale * zoomLevel;
+    let fontSize = Math.max(1, item.size * (isLandscape ? 1.1 : 1.3) * finalScale);
+    
+    const depthAlpha = Math.max(0.3, Math.min(1, item.z > 800 ? 1 - ((item.z - 800) / 200) : (item.z < -200 ? 1 + ((item.z + 200) / 200) : 1)));
+    ctx.globalAlpha = depthAlpha * dimFactor * item.opacity;
+
+    let displayText = item.text.includes("Konsens") ? `Konsens = ${currentPlayer} ⋈ KI` : item.text;
+    
+    ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
+    let textWidth = ctx.measureText(displayText).width;
+
+    if (item.isSelected) {
+        const maxAllowedWidth = (width * 0.85) / zoomLevel; 
+        if (textWidth > maxAllowedWidth) {
+            const scaleFactor = maxAllowedWidth / textWidth; 
+            fontSize *= scaleFactor;
+            ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
+            textWidth = ctx.measureText(displayText).width; 
+        }
+    }
+
+    item.screenX = x; item.screenY = y; item.screenWidth = textWidth * scale; 
+
+    if (item.isSelected) {
+        ctx.fillStyle = "rgba(15, 25, 45, 0.95)";
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = 2; ctx.shadowBlur = 20; ctx.shadowColor = item.color;
+        const paddingX = 20; const paddingY = 15;
+        ctx.beginPath();
+        ctx.roundRect(-textWidth/2 - paddingX, -fontSize/2 - paddingY, textWidth + paddingX*2, fontSize + paddingY*2, 10);
+        ctx.fill(); ctx.stroke();
+    }
+
+    ctx.fillStyle = item.isSelected ? "#ffffff" : (item.previousRating !== undefined ? "#ffcc00" : item.color);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowBlur = 10 * finalScale * item.weight; ctx.shadowColor = item.color;
+    ctx.fillText(displayText, 0, 0);
+
+    if (item.previousRating !== undefined && !item.isSelected) {
+        ctx.fillStyle = "#ffcc00"; 
+        ctx.font = `${fontSize * 0.6}px Arial`;
+        ctx.fillText("War: " + ratingIcons[item.previousRating], 0, fontSize + 10); 
+    }
+
+    ctx.restore();
+}
+
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
+        this.beginPath(); this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
+        this.closePath(); return this;
+    };
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    resize();
