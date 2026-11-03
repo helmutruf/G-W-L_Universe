@@ -346,6 +346,18 @@ function undoGodSuggestion() {
 
 // --- DATENBANK ---
 function loadDatabase() {
+    // NEU: Editierte Aussagen laden
+    const savedStatements = localStorage.getItem('gwl_edited_statements');
+    if (savedStatements) {
+        try {
+            const edits = JSON.parse(savedStatements);
+            edits.forEach(edit => {
+                const stmt = statements.find(s => s.text === edit.original);
+                if (stmt) stmt.text = edit.newText;
+            });
+        } catch (e) { console.log("Fehler beim Laden der Edits"); }
+    }
+    
     const saved = localStorage.getItem(DB_KEY);
     if (saved) {
         try { allPlayersData = JSON.parse(saved); } catch (e) { allPlayersData = {}; }
