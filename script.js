@@ -1065,3 +1065,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 
 window.addEventListener('DOMContentLoaded', () => {
     resize();
+    initGame();
+    loadDatabase();
+    draw();
+});
