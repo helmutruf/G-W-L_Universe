@@ -239,7 +239,7 @@ function editStatement() {
 
         updateUI();
     }
-        
+}      
 function toggleGodMode() {
     isGodMode = !isGodMode;
 const godBtn = document.getElementById('btn-god-mode');
