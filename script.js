@@ -1068,3 +1068,55 @@ window.addEventListener('DOMContentLoaded', () => {
     loadDatabase();
     draw();
 });
+// --- SICHERHEITS-RESET: NEUE FUNKTIONEN ---
+
+function editStatement() {
+    if (!activeItem) {
+        kiText.innerText = "Bitte wähle zuerst eine Aussage aus, die du bearbeiten möchtest.";
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 4000);
+        return;
+    }
+
+    const currentText = activeItem.text;
+    const newText = prompt("Aussage bearbeiten:", currentText);
+
+    if (newText && newText.trim() !== "" && newText !== currentText) {
+        
+        const editBtn = document.querySelector('button[onclick="editStatement()"]');
+        if (editBtn) {
+            editBtn.classList.remove('dimmed');
+            editBtn.classList.add('active');
+        }
+
+        activeItem.text = newText.trim();
+
+        const statement = statements.find(s => s.text === currentText);
+        if (statement) {
+            statement.text = newText.trim();
+        }
+
+        kiText.innerText = `Aussage geändert zu: "${newText.trim()}". Der Anschauungsraum hat sich angepasst.`;
+        kiPanel.classList.add('active');
+        setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
+
+        updateUI();
+    }
+}
+
+// Überschreibt die alte toggleGodMode-Funktion, damit der Button sicher leuchtet
+const originalToggleGodMode = toggleGodMode;
+toggleGodMode = function() {
+    originalToggleGodMode(); 
+    
+    const godBtn = document.getElementById('btn-god-mode');
+    if (godBtn) {
+        if (isGodMode) {
+            godBtn.classList.remove('dimmed');
+            godBtn.classList.add('active');
+        } else {
+            godBtn.classList.remove('active');
+            godBtn.classList.add('dimmed');
+        }
+    }
+};
