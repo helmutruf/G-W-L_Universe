@@ -1,4 +1,3 @@
-
 // --- VARIABLEN ---
 let activeItem = null; 
 let isGodMode = false;
@@ -147,7 +146,7 @@ function resize() {
 window.addEventListener('resize', resize);
 
 function startPlayerTurn() {
-    requestFullscreenMode(); // Startet Vollbild
+    requestFullscreenMode(); 
     
     let rawName = nameInput.value.trim();
     currentPlayer = rawName === "" ? "Du" : rawName;
@@ -207,6 +206,7 @@ function exitFullscreen() {
         document.msExitFullscreen();
     }
 }
+
 function editStatement() {
     if (!activeItem) {
         kiText.innerText = "Bitte wähle zuerst eine Aussage aus, die du bearbeiten möchtest.";
@@ -233,23 +233,32 @@ function editStatement() {
             statement.text = newText.trim();
         }
 
+        let savedEdits = JSON.parse(localStorage.getItem('gwl_edited_statements') || '[]');
+        savedEdits.push({ original: currentText, newText: newText.trim() });
+        localStorage.setItem('gwl_edited_statements', JSON.stringify(savedEdits));
+
         kiText.innerText = `Aussage geändert zu: "${newText.trim()}". Der Anschauungsraum hat sich angepasst.`;
         kiPanel.classList.add('active');
         setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
 
         updateUI();
     }
-}      
+}
+
 function toggleGodMode() {
     isGodMode = !isGodMode;
-const godBtn = document.getElementById('btn-god-mode');
-if (isGodMode) {
-    godBtn.classList.remove('dimmed');
-    godBtn.classList.add('active');
-} else {
-    godBtn.classList.remove('active');
-    godBtn.classList.add('dimmed');
-}    
+    
+    const godBtn = document.getElementById('btn-god-mode');
+    if (godBtn) {
+        if (isGodMode) {
+            godBtn.classList.remove('dimmed');
+            godBtn.classList.add('active');
+        } else {
+            godBtn.classList.remove('active');
+            godBtn.classList.add('dimmed');
+        }
+    }
+    
     const normalButtons = document.getElementById('normal-buttons');
     const godButtons = document.getElementById('god-buttons');
     
@@ -343,10 +352,8 @@ function undoGodSuggestion() {
     updateScoreUI();
     selectItem(null);
 }
-
 // --- DATENBANK ---
 function loadDatabase() {
-    // NEU: Editierte Aussagen laden
     const savedStatements = localStorage.getItem('gwl_edited_statements');
     if (savedStatements) {
         try {
@@ -357,7 +364,7 @@ function loadDatabase() {
             });
         } catch (e) { console.log("Fehler beim Laden der Edits"); }
     }
-    
+
     const saved = localStorage.getItem(DB_KEY);
     if (saved) {
         try { allPlayersData = JSON.parse(saved); } catch (e) { allPlayersData = {}; }
@@ -695,6 +702,9 @@ function updateUI() {
     if (activeItem) {
         uiPanel.classList.add('active');
         
+        const editBtn = document.querySelector('button[onclick="editStatement()"]');
+        if (editBtn) { editBtn.classList.remove('dimmed'); editBtn.classList.add('active'); }
+
         let displayText = activeItem.text.includes("Konsens") ? `Konsens = ${currentPlayer} ⋈ KI` : activeItem.text;
         uiText.innerText = displayText;
         uiText.style.color = activeItem.color;
@@ -703,381 +713,8 @@ function updateUI() {
         if (btns[activeItem.stateIndex]) btns[activeItem.stateIndex].classList.add('selected');
     } else {
         uiPanel.classList.remove('active');
-    }
-}
-
-function selectItem(item) {
-    items.forEach(i => i.isSelected = false);
-    if (item) {
-        item.isSelected = true;
-        activeItem = item;
-        item.z = 50; 
         
-        items.sort((a, b) => {
-            if (a.id === item.id) return 1;
-            if (b.id === item.id) return -1;
-            return b.z - a.z;
-        });
-        createColorBlob(item.x, item.baseY, item.color, 30);
-    } else { activeItem = null; }
-    updateUI();
-}
-
-function createColorBlob(x, y, color, size) {
-    particles.push({
-        x: x, y: y,
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-        radius: size + Math.random() * 20,
-        color: color,
-        alpha: 0.6,
-        decay: 0.02
-    });
-}
-
-function updatePhysics() {
-    if (!activeItem) {
-        items.forEach(item => {
-            if (!item.isSelected && item.isActive) {
-                item.physicsVx *= 0.95; item.physicsVy *= 0.95;
-            }
-        });
-        return;
+        const editBtn = document.querySelector('button[onclick="editStatement()"]');
+        if (editBtn) { editBtn.classList.add('dimmed'); editBtn.classList.remove('active'); }
     }
-
-    let activeNode = null;
-    for (const key in semanticGraph) {
-        if (activeItem.text.includes(key)) { activeNode = semanticGraph[key]; break; }
-    }
-    if (!activeNode) return;
-
-    items.forEach(item => {
-        if (item === activeItem || !item.isActive) return;
-        const dx = item.x - activeItem.x;
-        const dy = item.baseY - activeItem.baseY;
-        const dist = Math.hypot(dx, dy);
-        
-        if (dist > 0) {
-            const angle = Math.atan2(dy, dx);
-            let isAlly = activeNode.allies.some(a => item.text.includes(a));
-            let isEnemy = activeNode.enemies.some(e => item.text.includes(e));
-
-            if (isAlly) {
-                const force = (300 / dist) * 0.5; 
-                item.physicsVx -= Math.cos(angle) * force;
-                item.physicsVy -= Math.sin(angle) * force;
-                if (Math.random() < 0.1) createColorBlob(item.x, item.baseY, item.color, 15);
-            } else if (isEnemy) {
-                const force = (300 / dist) * 1.5; 
-                item.physicsVx += Math.cos(angle) * force;
-                item.physicsVy += Math.sin(angle) * force;
-                if (Math.random() < 0.2) createColorBlob(item.x, item.baseY, "#ff4d4d", 25);
-            }
-        }
-    });
-}
-
-function updateEntities() {
-    entities.forEach(e => {
-        let closestItem = null;
-        let minDist = Infinity;
-        
-        items.forEach(item => {
-            if (item.isActive && item.opacity > 0.5) {
-                const dist = Math.hypot(item.x - e.x, item.baseY - e.y);
-                if (dist < minDist) { minDist = dist; closestItem = item; }
-            }
-        });
-
-        if (closestItem && !activeItem) { 
-            const dx = closestItem.x - e.x;
-            const dy = closestItem.baseY - e.y;
-            const angle = Math.atan2(dy, dx);
-            e.vx += Math.cos(angle) * 0.1; 
-            e.vy += Math.sin(angle) * 0.1;
-        } else if (activeItem) {
-            e.vx += (Math.random() - 0.5) * 0.5;
-            e.vy += (Math.random() - 0.5) * 0.5;
-        }
-
-        e.vx *= 0.95; e.vy *= 0.95;
-        e.x += e.vx; e.y += e.vy;
-    });
-}
-
-function updateParticles() {
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.x += p.vx; p.y += p.vy;
-        p.alpha -= p.decay; p.radius += 0.5;
-        if (p.alpha <= 0) particles.splice(i, 1);
-    }
-}
-
-function drawParticles() {
-    particles.forEach(p => {
-        ctx.beginPath();
-        let gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
-        gradient.addColorStop(0, p.color);
-        gradient.addColorStop(1, 'transparent');
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = p.alpha;
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    ctx.globalAlpha = 1.0;
-}
-
-function drawEntities() {
-    entities.forEach(e => {
-        ctx.save();
-        ctx.translate(e.x, e.y);
-        ctx.beginPath();
-        ctx.arc(0, 0, 5, 0, Math.PI * 2);
-        ctx.fillStyle = e.color;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = e.color;
-        ctx.fill();
-        ctx.restore();
-    });
-}
-
-function getAdjustedCoords(clientX, clientY) {
-    centerX = width / 2; centerY = height / 2;
-    return { x: (clientX - centerX) / zoomLevel + centerX, y: (clientY - centerY) / zoomLevel + centerY };
-}
-
-window.addEventListener('wheel', (e) => {
-    e.preventDefault(); zoomLevel -= e.deltaY * 0.001; zoomLevel = Math.max(0.3, Math.min(4.0, zoomLevel));
-}, { passive: false });
-
-canvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) {
-        initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        activeItem = null; 
-    } else if (e.touches.length === 1) {
-        const coords = getAdjustedCoords(e.touches[0].clientX, e.touches[0].clientY);
-        handlePointerDown(coords.x, coords.y);
-    }
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2 && initialPinchDistance) {
-        e.preventDefault(); 
-        const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        zoomLevel = Math.max(0.3, Math.min(4.0, zoomLevel * (currentDistance / initialPinchDistance)));
-        initialPinchDistance = currentDistance;
-    } else if (e.touches.length === 1) {
-        const coords = getAdjustedCoords(e.touches[0].clientX, e.touches[0].clientY);
-        handlePointerMove(coords.x, coords.y);
-    }
-}, { passive: false });
-
-canvas.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) initialPinchDistance = null;
-    if (e.touches.length === 0) handlePointerUp();
-});
-
-canvas.addEventListener('mousedown', (e) => {
-    const coords = getAdjustedCoords(e.clientX, e.clientY); handlePointerDown(coords.x, coords.y);
-});
-canvas.addEventListener('mousemove', (e) => {
-    const coords = getAdjustedCoords(e.clientX, e.clientY); handlePointerMove(coords.x, coords.y);
-});
-canvas.addEventListener('mouseup', () => { handlePointerUp(); });
-
-function handlePointerDown(x, y) {
-    let clickedOnItem = false;
-    for (let i = items.length - 1; i >= 0; i--) {
-        const item = items[i];
-        if (item.isActive && item.opacity > 0.5 && item.screenWidth > 0) { 
-            const distToTextCenter = Math.hypot(x - item.screenX, y - item.screenY);
-            if (distToTextCenter < (item.screenWidth / 2) + 40) {
-                activeItem = item;
-                isDragging = false;
-                dragStartX = x; dragStartY = y;
-                if (!item.isSelected) { selectItem(item); }
-                clickedOnItem = true;
-                break; 
-            }
-        }
-    }
-    if (!clickedOnItem) {
-        if (activeItem && !activeItem.isSelected) {
-            const scale = (focalLength / (focalLength + activeItem.z));
-            activeItem.targetX = (x - centerX) / scale;
-            activeItem.targetY = (y - centerY) / scale;
-            activeItem.isMovingToTarget = true;
-        } else { selectItem(null); }
-    }
-}
-
-function handlePointerMove(x, y) {
-    if (activeItem && !isDragging) {
-        const distMoved = Math.hypot(x - dragStartX, y - dragStartY);
-        if (distMoved > 8) { isDragging = true; activeItem.isMovingToTarget = false; }
-    }
-    if (isDragging && activeItem) {
-        const scale = (focalLength / (focalLength + activeItem.z));
-        activeItem.x += (x - dragStartX) / scale;
-        activeItem.baseY += (y - dragStartY) / scale;
-        dragStartX = x; dragStartY = y;
-    }
-}
-
-function handlePointerUp() { isDragging = false; }
-
-function triggerEndgame() {
-    document.getElementById('endgame-text').innerText = `Du hast alle ${statements.length} Aussagen bewertet, ${currentPlayer}. Dein Kohärenz-Score liegt bei ${coherenceScore} Punkten. Aus deinen Entscheidungen und den Meinungen der Mitspieler ist ein einzigartiger Anschauungsraum entstanden. Jede Meinung wurde ein Teil deiner Wahrheit.`;
-    document.getElementById('endgame-modal').classList.add('active');
-}
-
-function restartGame() {
-    document.getElementById('endgame-modal').classList.remove('active');
-    coherenceScore = 50;
-    updateScoreUI();
-    stopAll();
-    kiText.innerText = `Ein neuer Raum entsteht, ${currentPlayer}. Zeig mir noch einmal, was du für wahr hältst...`;
-    kiPanel.classList.add('active');
-    setTimeout(() => { kiPanel.classList.remove('active'); }, 5000);
-}
-
-function draw() {
-    if (!width || !height) { requestAnimationFrame(draw); return; } 
-    
-    ctx.clearRect(0, 0, width, height);
-    centerX = width / 2; centerY = height / 2;
-    
-    items.sort((a, b) => b.z - a.z);
-    
-    if (!isPaused) { 
-        time += 0.02; 
-        updatePhysics(); 
-        updateParticles(); 
-        updateEntities();
-    }
-
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(zoomLevel, zoomLevel);
-    ctx.translate(-centerX, -centerY);
-
-    drawParticles();
-    drawEntities();
-
-    items.forEach(item => {
-        if (item.isActive && item.opacity < 1) item.opacity += 0.05;
-        else if (!item.isActive && item.opacity > 0) item.opacity -= 0.05;
-
-        if (item.opacity <= 0.01) { item.screenWidth = 0; return; }
-
-        if (!item.isSelected && item.isActive && !item.isMovingToTarget) {
-            item.x += item.physicsVx;
-            item.baseY += item.physicsVy;
-            item.physicsVx *= 0.95; item.physicsVy *= 0.95;
-        }
-
-        if (item.isMovingToTarget && !isPaused) {
-            item.x += (item.targetX - item.x) * 0.1;
-            item.baseY += (item.targetY - item.baseY) * 0.1;
-            if (Math.hypot(item.targetX - item.x, item.targetY - item.baseY) < 1) {
-                item.x = item.targetX; item.baseY = item.targetY;
-                item.isMovingToTarget = false;
-            }
-        } 
-        else if (!item.isSelected && !isPaused && item !== currentChallengeItem) {
-            item.x += baseWindSpeed;
-            const maxX = width * 1.2;
-            if (item.x > maxX) {
-                item.x = -maxX;
-                item.baseY = (Math.random() - 0.5) * (height * 0.8); 
-            }
-        }
-
-        const waveOffset = item.isSelected || isPaused ? 0 : Math.sin(item.x * item.waveFrequency + time * item.waveSpeed + item.phaseShift) * item.waveAmplitude;
-        const currentY = item.baseY + waveOffset;
-        const currentRotation = item.isSelected || isPaused ? 0 : item.rotationBase + Math.sin(time * item.waveSpeed + item.phaseShift) * 0.1;
-
-        const scale = focalLength / (focalLength + item.z);
-        const screenX = centerX + item.x * scale;
-        const screenY = centerY + currentY * scale;
-
-        let globalDim = (activeItem && !item.isSelected) ? 0.2 : 1.0;
-
-        if (screenX > -400 && screenX < width + 400 && screenY > -400 && screenY < height + 400) {
-            drawSpruchband(item, screenX, screenY, scale, currentRotation, globalDim);
-        } else { item.screenWidth = 0; }
-    });
-
-    ctx.restore();
-    requestAnimationFrame(draw);
-}
-
-function drawSpruchband(item, x, y, scale, rotation, dimFactor) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rotation);
-    
-    const finalScale = scale * zoomLevel;
-    let fontSize = Math.max(1, item.size * (isLandscape ? 1.1 : 1.3) * finalScale);
-    
-    const depthAlpha = Math.max(0.3, Math.min(1, item.z > 800 ? 1 - ((item.z - 800) / 200) : (item.z < -200 ? 1 + ((item.z + 200) / 200) : 1)));
-    ctx.globalAlpha = depthAlpha * dimFactor * item.opacity;
-
-    let displayText = item.text.includes("Konsens") ? `Konsens = ${currentPlayer} ⋈ KI` : item.text;
-    
-    ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
-    let textWidth = ctx.measureText(displayText).width;
-
-    if (item.isSelected) {
-        const maxAllowedWidth = (width * 0.85) / zoomLevel; 
-        if (textWidth > maxAllowedWidth) {
-            const scaleFactor = maxAllowedWidth / textWidth; 
-            fontSize *= scaleFactor;
-            ctx.font = "bold " + fontSize + "px 'Courier New', monospace";
-            textWidth = ctx.measureText(displayText).width; 
-        }
-    }
-
-    item.screenX = x; item.screenY = y; item.screenWidth = textWidth * scale; 
-
-    if (item.isSelected) {
-        ctx.fillStyle = "rgba(15, 25, 45, 0.95)";
-        ctx.strokeStyle = item.color;
-        ctx.lineWidth = 2; ctx.shadowBlur = 20; ctx.shadowColor = item.color;
-        const paddingX = 20; const paddingY = 15;
-        ctx.beginPath();
-        ctx.roundRect(-textWidth/2 - paddingX, -fontSize/2 - paddingY, textWidth + paddingX*2, fontSize + paddingY*2, 10);
-        ctx.fill(); ctx.stroke();
-    }
-
-    ctx.fillStyle = item.isSelected ? "#ffffff" : (item.previousRating !== undefined ? "#ffcc00" : item.color);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.shadowBlur = 10 * finalScale * item.weight; ctx.shadowColor = item.color;
-    ctx.fillText(displayText, 0, 0);
-
-    if (item.previousRating !== undefined && !item.isSelected) {
-        ctx.fillStyle = "#ffcc00"; 
-        ctx.font = `${fontSize * 0.6}px Arial`;
-        ctx.fillText("War: " + ratingIcons[item.previousRating], 0, fontSize + 10); 
-    }
-
-    ctx.restore();
-}
-
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-        if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
-        this.beginPath(); this.moveTo(x + r, y);
-        this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
-        this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
-        this.closePath(); return this;
-    };
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    resize();
-    initGame();
-    loadDatabase();
-    draw();
-});
+                    }
