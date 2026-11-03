@@ -511,5 +511,4 @@ function startAIChallenge() {
 }
 
 function berechneGlobaleKohaerenz() {
-    const myData = allPlayersData[currentPlayer] || [];
-    if (myData.l
+    
